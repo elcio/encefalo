@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Jogo do Encéfalo</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: sans-serif;
+      }
+      div#app {
+        max-width: 480px;
+        margin:0 auto;
+      }
+      div#app header {
+        background: #666;
+        color:white;
+        padding:10px;
+        text-align:right;
+      }
+      div#app img {
+        max-width:100%;
+      }
+      div#app h2 {
+        margin: 20px 10px 10px;
+      }
+      div#app button {
+        display:block;
+        width: calc( 100% - 20px );
+        padding:20px;
+        margin:10px;
+        border:1px solid;
+        border-radius:10px;
+        font-size:16px;
+      }
+      div#app .clicked .certa {
+        background: #9F9;
+      }
+      div#app .clicked .errada {
+        background: #F99;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header><div id="score">Score: {{score}}</div></header>
+      <main :class="this.clicked?'clicked':''">
+        <img :src="img" />
+        <h2>{{['Estrutura', 'Função', 'Lesão'][taxonomia]}}</h2>
+        <button 
+          v-for="option in options"
+          :class="option[1]?'certa':'errada'"
+          @click="palpite(option)">{{option[0]}}</button>
+      </main>
+    </div>
+    <script>
+    let v = Vue.createApp({
+      data(){
+        return {
+          estruturas: [],
+          taxonomia: 'Estrutura',
+          options: [
+            ['Aderência intertalâmica', true],
+            ['Aderência intertalâmica 2', false],
+            ['Aderência intertalâmica 3', false],
+            ['Aderência intertalâmica 4', false],
+          ],
+          score: 0,
+          clicked: true,
+        }
+      },
+      computed: {
+        estrutura(){
+          return this.estruturas[0]
+        },
+        img(){
+          if(this.estrutura){
+            return `img/${this.estrutura[0]} -${this.estrutura[1]} -${this.estrutura[2]}.jpg`
+          }
+          return ''
+        },
+      },
+      methods: {
+        sorteia(){
+          this.estruturas.sort((a,b)=>Math.random()*2-1)
+          this.taxonomia=Math.floor(Math.random()*3)
+          this.options=this.estruturas.slice(0,4).map(
+            (estrutura, idx)=>[estrutura[this.taxonomia], idx==0]
+          )
+          this.options.sort((a,b)=>Math.random()*2-1)
+          this.clicked=false
+        },
+        palpite(option){
+          if(this.clicked)return
+          if(option[1]){
+            this.score++
+          }else{
+            this.score--
+          }
+          this.clicked=true
+          setTimeout(this.sorteia, 4000)
+        },
+      },
+      async mounted(){
+        let f = await fetch('data.json')
+        this.estruturas = await f.json()
+        this.sorteia()
+      },
+    }).mount('#app')
+    </script>
+  </body>
+</html>
